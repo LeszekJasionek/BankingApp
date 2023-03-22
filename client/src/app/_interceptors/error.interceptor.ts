@@ -17,22 +17,24 @@ export class ErrorInterceptor implements HttpInterceptor {
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if(error) {
-          switch(error.status) {
+      catchError(error => {
+        if (error) {
+          switch (error.status) {
             case 400:
-               if(error.error.errors) {
-                  const modelStateErrors = [];
-                  for (const key in error.error.errors) {
-                    if(error.error.errors[key]) {
-                      modelStateErrors.push(error.error.errors[key])
-                    }
+              if (error.error.errors) {
+                const modalStateErrors = [];
+                for (const key in error.error.errors) {
+                  if (error.error.errors[key]) {
+                    modalStateErrors.push(error.error.errors[key])
                   }
-                  throw modelStateErrors.flat();
-               } else {
-                 this.toastr.error(error.error, error.status.toString())
-               }
-               break;
+                }
+                throw modalStateErrors.flat();
+              } else if (typeof(error.error) === 'object') {
+                this.toastr.error("Check if password has at least one digit and one big letter");
+              } else {
+                this.toastr.error(error.error.toString(), error.status.toString());
+              }
+              break;
                case 401:
                 this.toastr.error('Unauthorised', error.status.toString());
                 break;

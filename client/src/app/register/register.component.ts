@@ -20,19 +20,17 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.maxDate = new Date();
     this.maxDate.setFullYear(this.maxDate.getFullYear() - 18);
   }
 
-  initializeForm() {
+   initializeForm() {
     this.registerForm = this.fb.group({
       gender: ['male'],
       username: ['', Validators.required],
-      knownAs: ['', Validators.required],
       dateOfBirth: ['', Validators.required],
-      city: ['', Validators.required],
-      country: ['', Validators.required],
       password: ['', [Validators.required, 
-        Validators.minLength(4), Validators.maxLength(8) ]],
+        Validators.minLength(2), Validators.maxLength(16)]],
       confirmPassword: ['', [Validators.required, this.matchValues('password')]],
     });
     this.registerForm.controls['password'].valueChanges.subscribe({
@@ -42,7 +40,7 @@ export class RegisterComponent implements OnInit {
 
   matchValues(matchTo: string) : ValidatorFn {
     return (control: AbstractControl) => {
-      return control.value === control.parent?.get(matchTo)?.value ? null : {notMatching: true};
+      return control.value === control.parent?.get(matchTo)?.value ? null : {isMatching: true};
     }
   }
 
@@ -53,9 +51,10 @@ export class RegisterComponent implements OnInit {
       next: () => {
         this.router.navigateByUrl('/members')
       },
-      error : error => {
-        this.validationErrors = error
-      }
+      error: error => {
+        this.validationErrors = error;
+        this.toastr.error;
+      } 
     })
   }
 

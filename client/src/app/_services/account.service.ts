@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { isArray } from 'ngx-bootstrap/chronos';
-import { BehaviorSubject, map } from 'rxjs';
+import { BehaviorSubject, map, ReplaySubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { User } from '../_models/user';
 import { PresenceService } from './presence.service';
@@ -14,7 +14,7 @@ export class AccountService {
   private currentUserSource = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSource.asObservable();
 
-  constructor(private http: HttpClient, private presenceService: PresenceService ) { }
+  constructor(private http: HttpClient, private presence: PresenceService ) { }
 
   login(model: any) {
     return this.http.post<User>(this.baseUrl + 'account/login', model).pipe(
@@ -22,6 +22,7 @@ export class AccountService {
         const user = response;
         if(user) {
           this.setCurrentUser(user);
+          this.presence.createHubConnection(user);
         }
       })
     )
@@ -29,9 +30,10 @@ export class AccountService {
 
  register(model: any) {
     return this.http.post<User>(this.baseUrl + 'account/register', model).pipe(
-      map(user => {
+      map((user: User) => {
         if(user) {
           this.setCurrentUser(user);
+          this.presence.createHubConnection(user);
         }
       })
     )
@@ -44,13 +46,13 @@ export class AccountService {
     Array.isArray(roles) ? user.roles = roles: user.roles.push(roles);
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSource.next(user);
-    this.presenceService.createHubConnection(user);
+    // this.presence.createHubConnection(user);
   }
 
   logout() {
     localStorage.removeItem('user');
     this.currentUserSource.next(null);
-    this.presenceService.stopHubConnection();
+    this.presence.stopHubConnection();
   }
 
   getDecodedToken(token: string) {
